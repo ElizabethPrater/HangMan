@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -15,7 +15,7 @@ namespace Hangman
         private string randomWord;
         private char[] guessedLetters;
         private int attempts;
-        private readonly PictureBox picBoxHangman; // Declare the PictureBox
+        private readonly PictureBox picBoxHangman;
 
         public MainForm()
         {
@@ -117,19 +117,9 @@ namespace Hangman
             }
         }
 
-        private void Button1_Click(object sender, EventArgs e)
+        private void StartButton_Click(object sender, EventArgs e)
         {
             StartHangman();
-        }
-
-        private void PictureBox19_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void PictureBox2_Click(object sender, EventArgs e)
-        {
-
         }
     }
 }
