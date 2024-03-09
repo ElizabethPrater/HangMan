@@ -6,6 +6,30 @@ using System.Windows.Forms;
 
 namespace Hangman
 {
+    public class Hangman
+    {
+        public event EventHandler OnWrongGuess;
+        public int WrongGuessCount { get; private set; }
+        private string wordToGuess;
+        private List<char> guessedLetters = new List<char>();
+
+        public Hangman(string wordToGuess)
+        {
+            this.wordToGuess = wordToGuess;
+        }
+
+        public void Guess(char letter)
+        {
+            guessedLetters.Add(letter);
+
+            if (!wordToGuess.Contains(letter))
+            {
+                WrongGuessCount++;
+                OnWrongGuess?.Invoke(this, EventArgs.Empty);
+            }
+        }
+    }
+
     public partial class MainForm : Form
     {
         private readonly string[] phrases = new string[] { "Okay, now guess for real.", "Well, you had a 1 in 26 chance.", "Hmm, not quite.", "Wake me up when you're done.", "You know what's not right..." };
@@ -16,37 +40,28 @@ namespace Hangman
         private char[] guessedLetters;
         private int attempts;
         private readonly PictureBox picBoxHangman;
+        private Hangman hangman;
 
         public MainForm()
         {
             InitializeComponent();
             StartHangman();
 
-            Hangman.OnWrongGuess += Hangman_OnWrongGuess;
+            hangman.OnWrongGuess += Hangman_OnWrongGuess;
+        }
 
-            void Hangman_OnWrongGuess(object sender, EventArgs e)
+        private void Hangman_OnWrongGuess(object sender, EventArgs e)
+        {
+            int index = hangman.WrongGuessCount;
+
+            if (index < hangmanImages.Count)
             {
-                // The Hangman's WrongGuessCount starts at 0 and increments with each wrong guess
-                int index = Hangman.WrongGuessCount;
-
-                // Check if the index is within the bounds of the list
-                if (index < hangmanImages.Count)
-                {
-                    pictureBox1.Image = Image.FromFile(hangmanImages[index]);
-                }
-                else
-                {
-                    // If the player has made more wrong guesses than there are images, you might want to display a default image
-                    pictureBox1.Image = Image.FromFile ("DefaultImage");
-                }
+                pictureBox1.Image = Image.FromFile(hangmanImages[index]);
             }
-            // Initialize the PictureBox
-            picBoxHangman = new PictureBox
+            else
             {
-                Location = new Point(10, 10),
-                Size = new Size(100, 100)
-            };
-            Controls.Add(picBoxHangman);
+                pictureBox1.Image = Image.FromFile("DefaultImage");
+            }
         }
 
         private void StartHangman()
@@ -66,11 +81,12 @@ namespace Hangman
 
             lblPhrase.Text = "Phrase: " + new string(guessedLetters);
 
-            // Load an image into the PictureBox
             if (attempts < hangmanImages.Count)
             {
                 picBoxHangman.Image = new Bitmap(hangmanImages[attempts]);
             }
+
+            hangman = new Hangman(randomWord);
         }
 
         private void BtnGuess_Click(object sender, EventArgs e)
@@ -83,25 +99,7 @@ namespace Hangman
                 return;
             }
 
-            if (randomWord.Contains(guess))
-            {
-                for (int i = 0; i < randomWord.Length; i++)
-                {
-                    if (randomWord[i] == guess[0])
-                    {
-                        guessedLetters[i] = guess[0];
-                    }
-                }
-            }
-            else
-            {
-                attempts--;
-                // Update the PictureBox image here
-                if (attempts >= 0 && attempts < hangmanImages.Count)
-                {
-                    picBoxHangman.Image = new Bitmap(hangmanImages[attempts]);
-                }
-            }
+            hangman.Guess(guess[0]);
 
             lblPhrase.Text = "Phrase: " + new string(guessedLetters);
 
@@ -115,11 +113,6 @@ namespace Hangman
                 _ = MessageBox.Show("It's cool, I failed that one too. The phrase was: " + randomWord);
                 StartHangman();
             }
-        }
-
-        private void StartButton_Click(object sender, EventArgs e)
-        {
-            StartHangman();
         }
     }
 }
